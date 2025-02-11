@@ -17,3 +17,18 @@ class aboutPageView(TemplateView):
             'author': 'Developed by: Mateo Garcia'
         })
         return context
+
+class contactPageView(TemplateView):
+    template_name = 'pages/contact.html'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context.update({
+            'title': 'Contact - Online Store',
+            'subtitle': 'Contact',
+            'email': 'onlinestore@mail.com',
+            'address': '4702 University Ave, San Diego, California',
+            'phoneNumber': '(619) 283-7031'
+        })
+        return context
+
