@@ -1,13 +1,16 @@
-from django.shortcuts import render
+from django.shortcuts import render, redirect
 from django.views.generic import TemplateView
 from django.views import View
 from django.http import HttpResponseRedirect
+from django.urls import reverse
+from django import forms
+
 
 # Create your views here.
-class homePageView(TemplateView):
+class HomePageView(TemplateView):
     template_name = 'pages/home.html'
 
-class aboutPageView(TemplateView):
+class AboutPageView(TemplateView):
     template_name = 'pages/about.html'
 
     def get_context_data(self, **kwargs):
@@ -20,7 +23,7 @@ class aboutPageView(TemplateView):
         })
         return context
 
-class contactPageView(TemplateView):
+class ContactPageView(TemplateView):
     template_name = 'pages/contact.html'
 
     def get_context_data(self, **kwargs):
@@ -42,7 +45,7 @@ class Product:
         {"id":"4", "name":"Glasses", "description":"Best Glasses", "price":"100"} 
     ]
 
-class productIndexView(View):
+class ProductIndexView(View):
     template_name = 'products/index.html'
 
     def get(self, request):
@@ -53,7 +56,7 @@ class productIndexView(View):
 
         return render(request, self.template_name, viewData)
     
-class productShowView(View):
+class ProductShowView(View):
     template_name = 'products/show.html'
 
     def get(self, request, id):
@@ -68,3 +71,45 @@ class productShowView(View):
         viewData["product"] = product 
  
         return render(request, self.template_name, viewData)
+
+class ProductForm(forms.Form): 
+    name = forms.CharField(required=True) 
+    price = forms.FloatField(required=True) 
+
+class ProductCreateView(View): 
+    template_name = 'products/create.html' 
+ 
+    def get(self, request): 
+        form = ProductForm() 
+        viewData = {} 
+        viewData["subtitle"] = "Create product" 
+        viewData["form"] = form 
+        return render(request, self.template_name, viewData) 
+ 
+    def post(self, request): 
+        form = ProductForm(request.POST) 
+        if form.is_valid():
+            name = form.cleaned_data["name"]
+            price = form.cleaned_data["price"]
+            if price < 0:
+                form.add_error("price", "Price must be greater than 0")
+                return render(request, self.template_name, {"form":form})
+            Product.products.append({"id":str(len(Product.products)+1), "name":name, "price":price})     
+            return redirect('created')
+        else: 
+            viewData = {} 
+            viewData["title"] = "Create product" 
+            viewData["form"] = form 
+            return render(request, self.template_name, viewData)
+
+class ProductCreatedView(TemplateView):
+    template_name = 'products/productCreated.html'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context.update({
+            'title': 'Product created - Online Store',
+            'subtitle': 'Create product',
+            'message': 'Product created successfully'
+        })
+        return context
